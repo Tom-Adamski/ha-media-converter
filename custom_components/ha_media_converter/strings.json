@@ -1,0 +1,13 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "title": "HEIC Converter",
+        "description": "Add an authenticated upload panel that converts HEIC and HEIF photos to JPEG in your media folder."
+      }
+    },
+    "abort": {
+      "already_configured": "The HEIC Converter is already configured."
+    }
+  }
+}
