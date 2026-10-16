@@ -6,7 +6,7 @@ import logging
 from pathlib import Path
 
 from aiohttp import web
-from homeassistant.components.http import HomeAssistantView
+from homeassistant.helpers.http import HomeAssistantView
 from homeassistant.core import HomeAssistant
 
 from .const import DOMAIN, MAX_UPLOAD_BYTES, UPLOAD_URL

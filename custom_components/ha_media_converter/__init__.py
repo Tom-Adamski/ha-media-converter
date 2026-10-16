@@ -35,7 +35,7 @@ async def async_setup_entry(hass: HomeAssistant, entry) -> bool:
         webcomponent_name="ha-media-converter-panel",
         module_url=f"/{DOMAIN}/panel.js",
         embed_iframe=False,
-        require_admin=True,
+        require_admin=False,
     )
     return True
 
