@@ -39,3 +39,12 @@ input image is not preserved.
 Copy `custom_components/ha_media_converter` into the Home Assistant
 configuration's `custom_components` directory, restart Home Assistant, then
 add the integration through **Settings → Devices & services**.
+
+Run the tests with the Home Assistant version pinned in `requirements.txt`:
+
+```sh
+python -m unittest discover -s tests
+```
+
+The integration tests exercise setup and config-flow behavior against the
+installed Home Assistant APIs, so run them before deploying changes.
