@@ -1,12 +1,14 @@
 {
   "domain": "ha_media_converter",
   "name": "HA Media Converter",
+  "after_dependencies": ["panel_custom"],
   "codeowners": [],
   "config_flow": true,
+  "dependencies": ["http"],
   "integration_type": "service",
   "iot_class": "calculated",
   "requirements": [
     "pillow-heif==1.8.1"
   ],
-  "version": "0.1.0"
+  "version": "0.1.1"
 }

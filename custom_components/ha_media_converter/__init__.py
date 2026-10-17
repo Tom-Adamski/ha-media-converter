@@ -2,7 +2,7 @@
 
 from pathlib import Path
 
-from homeassistant.components import frontend, panel_custom
+from homeassistant.components import panel_custom
 from homeassistant.components.http import StaticPathConfig
 from homeassistant.core import HomeAssistant
 
@@ -11,7 +11,7 @@ from .http import UploadView
 
 
 async def async_setup(hass: HomeAssistant, config: dict) -> bool:
-    """Set up HTTP and frontend resources."""
+    """Set up HTTP resources and the configuration panel."""
     integration_dir = Path(__file__).parent
     hass.http.register_view(UploadView(hass))
     await hass.http.async_register_static_paths(
@@ -23,11 +23,6 @@ async def async_setup(hass: HomeAssistant, config: dict) -> bool:
             )
         ]
     )
-    return True
-
-
-async def async_setup_entry(hass: HomeAssistant, entry) -> bool:
-    """Set up the converter on the integration configuration page."""
     await panel_custom.async_register_panel(
         hass=hass,
         frontend_url_path=DOMAIN,
@@ -40,7 +35,11 @@ async def async_setup_entry(hass: HomeAssistant, entry) -> bool:
     return True
 
 
+async def async_setup_entry(hass: HomeAssistant, entry) -> bool:
+    """Set up a config entry."""
+    return True
+
+
 async def async_unload_entry(hass: HomeAssistant, entry) -> bool:
-    """Remove the converter configuration panel."""
-    frontend.async_remove_panel(hass, DOMAIN)
+    """Unload a config entry."""
     return True
