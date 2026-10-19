@@ -9,13 +9,14 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.typing import ConfigType
 
 from .const import DOMAIN
-from .http import UploadView
+from .http import DestinationsView, UploadView
 
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up HTTP resources and the configuration panel."""
     integration_dir = Path(__file__).parent
     hass.http.register_view(UploadView(hass))
+    hass.http.register_view(DestinationsView(hass))
     await hass.http.async_register_static_paths(
         [
             StaticPathConfig(

@@ -3,6 +3,7 @@
 import inspect
 import unittest
 from pathlib import Path
+from tempfile import TemporaryDirectory
 from types import SimpleNamespace
 from typing import cast
 from unittest.mock import create_autospec, patch
@@ -20,7 +21,13 @@ from custom_components.ha_media_converter.config_flow import (
     HaMediaConverterConfigFlow,
 )
 from custom_components.ha_media_converter.const import DOMAIN, PANEL_TITLE
-from custom_components.ha_media_converter.http import UploadView
+from custom_components.ha_media_converter.http import (
+    DestinationsView,
+    InvalidDestinationError,
+    UploadView,
+    _list_destinations,
+    _resolve_destination,
+)
 
 
 class IntegrationSetupTests(unittest.IsolatedAsyncioTestCase):
@@ -36,9 +43,14 @@ class IntegrationSetupTests(unittest.IsolatedAsyncioTestCase):
         ) as register_panel:
             self.assertTrue(await async_setup(hass, {}))
 
-        http.register_view.assert_called_once()
-        self.assertIsInstance(http.register_view.call_args.args[0], UploadView)
-        self.assertIs(http.register_view.call_args.args[0].hass, hass)
+        self.assertEqual(http.register_view.call_count, 2)
+        views = [call.args[0] for call in http.register_view.call_args_list]
+        upload_view = next(view for view in views if isinstance(view, UploadView))
+        destinations_view = next(
+            view for view in views if isinstance(view, DestinationsView)
+        )
+        self.assertIs(upload_view.hass, hass)
+        self.assertIs(destinations_view.hass, hass)
         http.async_register_static_paths.assert_awaited_once_with(
             [
                 StaticPathConfig(
@@ -112,6 +124,39 @@ class ConfigFlowTests(unittest.IsolatedAsyncioTestCase):
                 for parameter in expected.parameters.values()
             ],
         )
+
+
+class MediaDestinationTests(unittest.TestCase):
+    """Validate the available media folders and selected destination."""
+
+    def test_lists_nested_folders_and_resolves_selected_folder(self):
+        with TemporaryDirectory() as temporary_directory:
+            media_dir = Path(temporary_directory) / "media"
+            (media_dir / "Trips" / "2025").mkdir(parents=True)
+            (media_dir / "Camera").mkdir()
+
+            self.assertEqual(
+                _list_destinations(media_dir),
+                ["Camera", "Trips", "Trips/2025"],
+            )
+            self.assertEqual(
+                _resolve_destination(media_dir, "Trips/2025"),
+                media_dir / "Trips" / "2025",
+            )
+
+    def test_rejects_paths_outside_media_directory(self):
+        with TemporaryDirectory() as temporary_directory:
+            media_dir = Path(temporary_directory) / "media"
+            media_dir.mkdir()
+
+            with self.assertRaises(InvalidDestinationError):
+                _resolve_destination(media_dir, "../outside")
+
+    def test_allows_upload_to_media_root_before_it_exists(self):
+        with TemporaryDirectory() as temporary_directory:
+            media_dir = Path(temporary_directory) / "media"
+
+            self.assertEqual(_resolve_destination(media_dir, ""), media_dir)
 
 
 if __name__ == "__main__":

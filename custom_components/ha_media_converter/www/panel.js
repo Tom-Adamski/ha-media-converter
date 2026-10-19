@@ -26,7 +26,9 @@ class HaMediaConverterPanel extends HTMLElement {
           box-shadow: var(--ha-card-box-shadow, 0 2px 8px #0002);
         }
         .hint { color: var(--secondary-text-color); line-height: 1.5; }
-        input { display: block; margin: 20px 0; }
+        label { display: block; margin-top: 20px; }
+        select, input { display: block; margin: 8px 0 20px; }
+        select { max-width: 100%; min-width: 240px; padding: 8px; }
         button {
           padding: 10px 18px;
           border: 0;
@@ -42,9 +44,13 @@ class HaMediaConverterPanel extends HTMLElement {
         <h1>HEIC to JPEG</h1>
         <p class="hint">
           Select HEIC or HEIF photos to upload. The original and a JPEG copy
-          will be saved in Home Assistant's media folder.
-          Each file must be 20 MB or smaller.
+          will be saved in the selected Home Assistant media folder.
+          Choose an existing folder below. Each file must be 20 MB or smaller.
         </p>
+        <label for="destination">Save to</label>
+        <select id="destination" disabled>
+          <option value="">Media folder (root)</option>
+        </select>
         <input id="files" type="file" accept=".heic,.heif,image/heic,image/heif" multiple>
         <button id="upload" type="button">Upload and convert</button>
         <div id="results" role="status" aria-live="polite"></div>
@@ -54,14 +60,60 @@ class HaMediaConverterPanel extends HTMLElement {
     this.shadowRoot.querySelector("#upload").addEventListener("click", () => {
       this.uploadFiles();
     });
+    this._destinationsLoaded = false;
+    this.loadDestinations();
+  }
+
+  async loadDestinations() {
+    const selector = this.shadowRoot.querySelector("#destination");
+    const results = this.shadowRoot.querySelector("#results");
+    const token = this._hass.auth?.data?.access_token;
+    if (!token) {
+      results.textContent = "Home Assistant authentication is not available. Reload the panel and try again.";
+      return;
+    }
+
+    try {
+      const response = await fetch("/api/ha_media_converter/destinations", {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
+      const result = await response.json();
+      if (!response.ok) {
+        throw new Error(result.message || "Unable to load media folders.");
+      }
+      if (!Array.isArray(result.destinations)) {
+        throw new Error("The media folder list is invalid.");
+      }
+
+      for (const path of result.destinations) {
+        if (typeof path !== "string") {
+          throw new Error("The media folder list is invalid.");
+        }
+        const option = document.createElement("option");
+        option.value = path;
+        option.textContent = path;
+        selector.appendChild(option);
+      }
+      selector.disabled = false;
+      this._destinationsLoaded = true;
+    } catch (error) {
+      results.textContent = error.message || "Unable to load media folders.";
+    }
   }
 
   async uploadFiles() {
     const fileInput = this.shadowRoot.querySelector("#files");
     const button = this.shadowRoot.querySelector("#upload");
+    const destinationSelector = this.shadowRoot.querySelector("#destination");
     const results = this.shadowRoot.querySelector("#results");
     const files = Array.from(fileInput.files || []);
 
+    if (!this._destinationsLoaded) {
+      results.textContent = "Media folders are not available. Reload the panel and try again.";
+      return;
+    }
     if (files.length === 0) {
       results.textContent = "Choose at least one HEIC or HEIF file.";
       return;
@@ -76,6 +128,7 @@ class HaMediaConverterPanel extends HTMLElement {
     results.textContent = "";
     for (const file of files) {
       const form = new FormData();
+      form.append("destination", destinationSelector.value);
       form.append("file", file, file.name);
       try {
         const response = await fetch("/api/ha_media_converter/upload", {
@@ -89,7 +142,10 @@ class HaMediaConverterPanel extends HTMLElement {
         if (!response.ok) {
           throw new Error(result.message || "Conversion failed.");
         }
-        results.textContent += `Saved ${result.converted} and the original to Home Assistant media.\n`;
+        const destination = result.destination
+          ? `Home Assistant media/${result.destination}`
+          : "Home Assistant media";
+        results.textContent += `Saved ${result.converted} and the original to ${destination}.\n`;
       } catch (error) {
         results.textContent += `${file.name}: ${error.message}\n`;
       }

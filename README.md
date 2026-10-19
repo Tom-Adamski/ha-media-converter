@@ -8,7 +8,8 @@ Assistant's local media folder.
 
 - An authenticated uploader on the integration's configuration page.
 - Upload one or several `.heic` / `.heif` files from the browser.
-- JPEG output is saved beside the original in the `media` folder.
+- Choose the destination folder in Home Assistant's local `media` folder.
+- JPEG output is saved beside the original and can be stored in a subfolder.
 - Existing files are never overwritten; repeated names get a numeric suffix.
 - Uploads are limited to 20 MB and 40 megapixels per image.
 
@@ -24,8 +25,9 @@ Assistant's local media folder.
    use its configuration page to upload your photos.
 
 The uploader is administrator-only and does not add a sidebar item. The
-original HEIC/HEIF and converted JPEG remain in the local media folder and are
-available through Home Assistant's media browser.
+original HEIC/HEIF and converted JPEG remain in the selected local media folder
+and are available through Home Assistant's media browser. The panel lists
+existing folders beneath the local media folder.
 
 ## Requirements and limits
 
