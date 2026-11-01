@@ -51,6 +51,19 @@ class ConvertAndStoreTests(unittest.TestCase):
             self.assertEqual([path.name for path in media_dir.iterdir()], ["photo.jpg"])
             self.assertEqual((media_dir / "photo.jpg").read_bytes(), b"jpeg")
 
+    def test_saves_jpeg_and_png_inputs_unchanged(self):
+        for filename, image_format, data in (
+            ("photo.jpg", "JPEG", b"original jpeg bytes"),
+            ("photo.png", "PNG", b"original png bytes"),
+        ):
+            with self.subTest(filename=filename), tempfile.TemporaryDirectory() as directory:
+                image = MagicMock(format=image_format, width=1, height=1)
+                with patch("PIL.Image.open", return_value=image):
+                    result = convert_and_store(data, filename, Path(directory))
+
+                self.assertEqual(result, filename)
+                self.assertEqual((Path(directory) / filename).read_bytes(), data)
+
 
 if __name__ == "__main__":
     unittest.main()

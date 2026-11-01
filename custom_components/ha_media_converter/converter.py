@@ -18,11 +18,13 @@ class ImageTooLargeError(ValueError):
 
 
 def sanitize_filename(filename: str) -> tuple[str, str]:
-    """Return a safe basename and extension for an uploaded HEIF file."""
+    """Return a safe basename and extension for an accepted image file."""
     basename = Path(filename.replace("\\", "/")).name
     extension = Path(basename).suffix.lower()
     if extension not in ALLOWED_EXTENSIONS:
-        raise InvalidImageError("Only .heic and .heif files are supported.")
+        raise InvalidImageError(
+            "Only .heic, .heif, .jpg, .jpeg, and .png files are supported."
+        )
 
     stem = re.sub(r"[^A-Za-z0-9_-]+", "_", Path(basename).stem).strip("_")
     if not stem:
@@ -31,26 +33,43 @@ def sanitize_filename(filename: str) -> tuple[str, str]:
 
 
 def convert_and_store(data: bytes, filename: str, media_dir: Path) -> str:
-    """Convert a HEIF image to JPEG and save it in the media directory."""
+    """Convert HEIF images and save accepted images in the media directory."""
     from PIL import Image, ImageOps, UnidentifiedImageError
-    import pillow_heif
 
-    stem, _ = sanitize_filename(filename)
-    pillow_heif.register_heif_opener()
+    stem, extension = sanitize_filename(filename)
+    is_heif = extension in {".heic", ".heif"}
+    if is_heif:
+        import pillow_heif
+
+        pillow_heif.register_heif_opener()
 
     try:
         with Image.open(io.BytesIO(data)) as image:
-            if image.format != "HEIF":
-                raise InvalidImageError("The uploaded file is not a HEIC/HEIF image.")
+            expected_format = {
+                ".heic": "HEIF",
+                ".heif": "HEIF",
+                ".jpg": "JPEG",
+                ".jpeg": "JPEG",
+                ".png": "PNG",
+            }[extension]
+            if image.format != expected_format:
+                raise InvalidImageError(
+                    "The file contents do not match the filename extension."
+                )
             if image.width * image.height > MAX_IMAGE_PIXELS:
                 raise ImageTooLargeError(
                     f"Images must be {MAX_IMAGE_PIXELS:,} pixels or smaller."
                 )
             image.load()
-            converted = ImageOps.exif_transpose(image).convert("RGB")
-            output = io.BytesIO()
-            converted.save(output, format="JPEG", quality=92, optimize=True)
-            jpeg_data = output.getvalue()
+            if is_heif:
+                converted = ImageOps.exif_transpose(image).convert("RGB")
+                output = io.BytesIO()
+                converted.save(output, format="JPEG", quality=92, optimize=True)
+                stored_data = output.getvalue()
+                stored_extension = ".jpg"
+            else:
+                stored_data = data
+                stored_extension = extension
     except Image.DecompressionBombError as err:
         raise ImageTooLargeError(
             f"Images must be {MAX_IMAGE_PIXELS:,} pixels or smaller."
@@ -67,21 +86,21 @@ def convert_and_store(data: bytes, filename: str, media_dir: Path) -> str:
     media_dir.mkdir(parents=True, exist_ok=True)
     for index in range(10_000):
         suffix = "" if index == 0 else f"_{index}"
-        converted_name = f"{stem}{suffix}.jpg"
-        converted_path = media_dir / converted_name
+        stored_name = f"{stem}{suffix}{stored_extension}"
+        stored_path = media_dir / stored_name
 
-        converted_created = False
+        stored_created = False
         try:
-            with converted_path.open("xb") as converted_file:
-                converted_created = True
-                converted_file.write(jpeg_data)
+            with stored_path.open("xb") as stored_file:
+                stored_created = True
+                stored_file.write(stored_data)
         except FileExistsError:
             continue
         except OSError:
-            if converted_created:
-                converted_path.unlink(missing_ok=True)
+            if stored_created:
+                stored_path.unlink(missing_ok=True)
             raise
 
-        return converted_name
+        return stored_name
 
     raise OSError("Could not find a free filename in the media folder.")

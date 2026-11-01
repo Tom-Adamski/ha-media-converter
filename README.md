@@ -1,15 +1,15 @@
 # HA Media Converter
 
 A Home Assistant custom integration that uploads HEIC/HEIF photos, converts
-them to JPEG, and saves the converted image in Home Assistant's local media
-folder without retaining the source.
+them to JPEG, and saves them in Home Assistant's local media folder. JPEG and
+PNG images are also accepted and saved unchanged.
 
 ## Features
 
 - An authenticated uploader on the integration's configuration page.
-- Upload one or several `.heic` / `.heif` files from the browser.
+- Upload `.heic`, `.heif`, `.jpg`, `.jpeg`, and `.png` files from the browser.
 - Choose the destination folder in Home Assistant's local `media` folder.
-- JPEG output is saved in the selected folder; the HEIC/HEIF source is not kept.
+- HEIC/HEIF input is converted to JPEG; JPEG and PNG input is saved unchanged.
 - Existing files are never overwritten; repeated names get a numeric suffix.
 - Uploads are limited to 20 MB and 40 megapixels per image.
 
@@ -33,7 +33,7 @@ lists existing folders beneath the local media folder.
 The integration installs `pillow-heif` as a Python dependency. Conversion is
 performed locally by Home Assistant; images are not sent to an external
 service. HEIC/HEIF input is converted to RGB JPEG, so any transparency in an
-input image is not preserved.
+input image is not preserved. JPEG and PNG files retain their original bytes.
 
 ## Development
 

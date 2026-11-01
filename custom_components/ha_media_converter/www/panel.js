@@ -41,18 +41,18 @@ class HaMediaConverterPanel extends HTMLElement {
         #results { margin-top: 20px; white-space: pre-line; }
       </style>
       <main class="card">
-        <h1>HEIC to JPEG</h1>
+        <h1>Image uploader</h1>
         <p class="hint">
-          Select HEIC or HEIF photos to upload. A JPEG copy
-          will be saved in the selected Home Assistant media folder.
+          Select HEIC or HEIF photos to convert, or upload JPEG and PNG files
+          unchanged. Files will be saved in the selected Home Assistant media folder.
           Choose an existing folder below. Each file must be 20 MB or smaller.
         </p>
         <label for="destination">Save to</label>
         <select id="destination" disabled>
           <option value="">Media folder (root)</option>
         </select>
-        <input id="files" type="file" accept=".heic,.heif,image/heic,image/heif" multiple>
-        <button id="upload" type="button">Upload and convert</button>
+        <input id="files" type="file" accept=".heic,.heif,.jpg,.jpeg,.png,image/heic,image/heif,image/jpeg,image/png" multiple>
+        <button id="upload" type="button">Upload images</button>
         <div id="results" role="status" aria-live="polite"></div>
       </main>
     `;
@@ -115,7 +115,7 @@ class HaMediaConverterPanel extends HTMLElement {
       return;
     }
     if (files.length === 0) {
-      results.textContent = "Choose at least one HEIC or HEIF file.";
+      results.textContent = "Choose at least one HEIC, HEIF, JPEG, or PNG file.";
       return;
     }
     const token = this._hass.auth?.data?.access_token;
@@ -140,7 +140,7 @@ class HaMediaConverterPanel extends HTMLElement {
         });
         const result = await response.json();
         if (!response.ok) {
-          throw new Error(result.message || "Conversion failed.");
+          throw new Error(result.message || "Image upload failed.");
         }
         const destination = result.destination
           ? `Home Assistant media/${result.destination}`

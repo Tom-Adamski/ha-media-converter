@@ -85,7 +85,7 @@ def _resolve_destination(media_dir: Path, relative_path: str) -> Path:
 
 
 class UploadView(HomeAssistantView):
-    """Receive one HEIC/HEIF image and save its JPEG conversion."""
+    """Receive one accepted image and save it to the media folder."""
 
     url = UPLOAD_URL
     name = f"api:{DOMAIN}:upload"
@@ -114,7 +114,9 @@ class UploadView(HomeAssistantView):
         try:
             multipart = await request.multipart()
         except (ValueError, AssertionError):
-            return self.json_message("Upload a HEIC or HEIF file.", status_code=400)
+            return self.json_message(
+                "Upload a HEIC, HEIF, JPEG, or PNG file.", status_code=400
+            )
 
         filename: str | None = None
         data: bytes | None = None
@@ -143,7 +145,9 @@ class UploadView(HomeAssistantView):
                     )
                 continue
             if part.name != "file":
-                return self.json_message("Upload a HEIC or HEIF file.", status_code=400)
+                return self.json_message(
+                    "Upload a HEIC, HEIF, JPEG, or PNG file.", status_code=400
+                )
             if file_received:
                 return self.json_message("Upload one file at a time.", status_code=400)
             file_received = True
@@ -191,9 +195,9 @@ class UploadView(HomeAssistantView):
         except InvalidImageError as err:
             return self.json_message(str(err), status_code=400)
         except OSError:
-            _LOGGER.exception("Unable to save HEIC conversion to the media folder")
+            _LOGGER.exception("Unable to save image to the media folder")
             return self.json_message(
-                "Unable to save the converted image.", status_code=500
+                "Unable to save the image.", status_code=500
             )
 
         return self.json(
