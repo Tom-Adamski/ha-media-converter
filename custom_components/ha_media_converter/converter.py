@@ -30,12 +30,12 @@ def sanitize_filename(filename: str) -> tuple[str, str]:
     return stem[:100], extension
 
 
-def convert_and_store(data: bytes, filename: str, media_dir: Path) -> tuple[str, str]:
-    """Convert a HEIF image to JPEG and save both files in the media directory."""
+def convert_and_store(data: bytes, filename: str, media_dir: Path) -> str:
+    """Convert a HEIF image to JPEG and save it in the media directory."""
     from PIL import Image, ImageOps, UnidentifiedImageError
     import pillow_heif
 
-    stem, extension = sanitize_filename(filename)
+    stem, _ = sanitize_filename(filename)
     pillow_heif.register_heif_opener()
 
     try:
@@ -67,22 +67,8 @@ def convert_and_store(data: bytes, filename: str, media_dir: Path) -> tuple[str,
     media_dir.mkdir(parents=True, exist_ok=True)
     for index in range(10_000):
         suffix = "" if index == 0 else f"_{index}"
-        original_name = f"{stem}{suffix}{extension}"
         converted_name = f"{stem}{suffix}.jpg"
-        original_path = media_dir / original_name
         converted_path = media_dir / converted_name
-
-        original_created = False
-        try:
-            with original_path.open("xb") as original_file:
-                original_created = True
-                original_file.write(data)
-        except FileExistsError:
-            continue
-        except OSError:
-            if original_created:
-                original_path.unlink(missing_ok=True)
-            raise
 
         converted_created = False
         try:
@@ -90,14 +76,12 @@ def convert_and_store(data: bytes, filename: str, media_dir: Path) -> tuple[str,
                 converted_created = True
                 converted_file.write(jpeg_data)
         except FileExistsError:
-            original_path.unlink(missing_ok=True)
             continue
         except OSError:
-            original_path.unlink(missing_ok=True)
             if converted_created:
                 converted_path.unlink(missing_ok=True)
             raise
 
-        return original_name, converted_name
+        return converted_name
 
     raise OSError("Could not find a free filename in the media folder.")

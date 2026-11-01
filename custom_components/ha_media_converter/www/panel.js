@@ -43,7 +43,7 @@ class HaMediaConverterPanel extends HTMLElement {
       <main class="card">
         <h1>HEIC to JPEG</h1>
         <p class="hint">
-          Select HEIC or HEIF photos to upload. The original and a JPEG copy
+          Select HEIC or HEIF photos to upload. A JPEG copy
           will be saved in the selected Home Assistant media folder.
           Choose an existing folder below. Each file must be 20 MB or smaller.
         </p>
@@ -145,7 +145,7 @@ class HaMediaConverterPanel extends HTMLElement {
         const destination = result.destination
           ? `Home Assistant media/${result.destination}`
           : "Home Assistant media";
-        results.textContent += `Saved ${result.converted} and the original to ${destination}.\n`;
+        results.textContent += `Saved ${result.converted} to ${destination}.\n`;
       } catch (error) {
         results.textContent += `${file.name}: ${error.message}\n`;
       }

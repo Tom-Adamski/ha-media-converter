@@ -1,15 +1,15 @@
 # HA Media Converter
 
 A Home Assistant custom integration that uploads HEIC/HEIF photos, converts
-them to JPEG, and saves both the original and converted image in Home
-Assistant's local media folder.
+them to JPEG, and saves the converted image in Home Assistant's local media
+folder without retaining the source.
 
 ## Features
 
 - An authenticated uploader on the integration's configuration page.
 - Upload one or several `.heic` / `.heif` files from the browser.
 - Choose the destination folder in Home Assistant's local `media` folder.
-- JPEG output is saved beside the original and can be stored in a subfolder.
+- JPEG output is saved in the selected folder; the HEIC/HEIF source is not kept.
 - Existing files are never overwritten; repeated names get a numeric suffix.
 - Uploads are limited to 20 MB and 40 megapixels per image.
 
@@ -25,9 +25,8 @@ Assistant's local media folder.
    use its configuration page to upload your photos.
 
 The uploader is administrator-only and does not add a sidebar item. The
-original HEIC/HEIF and converted JPEG remain in the selected local media folder
-and are available through Home Assistant's media browser. The panel lists
-existing folders beneath the local media folder.
+converted JPEG is available through Home Assistant's media browser. The panel
+lists existing folders beneath the local media folder.
 
 ## Requirements and limits
 

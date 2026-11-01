@@ -183,7 +183,7 @@ class UploadView(HomeAssistantView):
             )
 
         try:
-            original_name, converted_name = await self.hass.async_add_executor_job(
+            converted_name = await self.hass.async_add_executor_job(
                 convert_and_store, data, filename, target_dir
             )
         except ImageTooLargeError as err:
@@ -198,7 +198,6 @@ class UploadView(HomeAssistantView):
 
         return self.json(
             {
-                "original": original_name,
                 "converted": converted_name,
                 "destination": destination,
             }
