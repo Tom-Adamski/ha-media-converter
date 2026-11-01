@@ -62,13 +62,16 @@ class HaMediaConverterPanel extends HTMLElement {
         <select id="destination" disabled>
           <option value="">Media folder (root)</option>
         </select>
-        <input id="files" type="file" accept=".heic,.heif,.jpg,.jpeg,.png,image/heic,image/heif,image/jpeg,image/png" multiple>
+        <input id="files" type="file" accept="image/*,.heic,.heif" multiple>
         <button id="upload" type="button">Upload images</button>
         <div id="results" role="status" aria-live="polite"></div>
       </main>
     `;
 
     this.shadowRoot.querySelector("#upload").addEventListener("click", () => {
+      this.uploadFiles();
+    });
+    this.shadowRoot.querySelector("#files").addEventListener("change", () => {
       this.uploadFiles();
     });
     this._destinationsLoaded = false;
