@@ -54,6 +54,7 @@ class ConvertAndStoreTests(unittest.TestCase):
     def test_saves_jpeg_and_png_inputs_unchanged(self):
         for filename, image_format, data in (
             ("photo.jpg", "JPEG", b"original jpeg bytes"),
+            ("photo.jpeg", "MPO", b"original mpo jpeg bytes"),
             ("photo.png", "PNG", b"original png bytes"),
         ):
             with self.subTest(filename=filename), tempfile.TemporaryDirectory() as directory:

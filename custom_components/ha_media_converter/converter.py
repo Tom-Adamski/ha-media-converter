@@ -45,16 +45,17 @@ def convert_and_store(data: bytes, filename: str, media_dir: Path) -> str:
 
     try:
         with Image.open(io.BytesIO(data)) as image:
-            expected_format = {
-                ".heic": "HEIF",
-                ".heif": "HEIF",
-                ".jpg": "JPEG",
-                ".jpeg": "JPEG",
-                ".png": "PNG",
+            expected_formats = {
+                ".heic": {"HEIF"},
+                ".heif": {"HEIF"},
+                ".jpg": {"JPEG", "MPO"},
+                ".jpeg": {"JPEG", "MPO"},
+                ".png": {"PNG"},
             }[extension]
-            if image.format != expected_format:
+            if image.format not in expected_formats:
                 raise InvalidImageError(
-                    "The file contents do not match the filename extension."
+                    f"The file contents were detected as {image.format or 'unknown'}, "
+                    "which does not match the filename extension."
                 )
             if image.width * image.height > MAX_IMAGE_PIXELS:
                 raise ImageTooLargeError(
