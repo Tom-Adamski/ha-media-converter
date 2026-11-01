@@ -18,12 +18,23 @@ class HaMediaConverterPanel extends HTMLElement {
           padding: 24px;
           color: var(--primary-text-color);
         }
+        :host([embedded]) {
+          max-width: none;
+          margin: 0;
+          padding: 0;
+        }
         h1 { font-size: 1.5rem; }
         .card {
           padding: 24px;
           border-radius: 12px;
           background: var(--ha-card-background, var(--card-background-color));
           box-shadow: var(--ha-card-box-shadow, 0 2px 8px #0002);
+        }
+        :host([embedded]) .card {
+          padding: 0;
+          border-radius: 0;
+          background: transparent;
+          box-shadow: none;
         }
         .hint { color: var(--secondary-text-color); line-height: 1.5; }
         label { display: block; margin-top: 20px; }
@@ -156,3 +167,45 @@ class HaMediaConverterPanel extends HTMLElement {
 }
 
 customElements.define("ha-media-converter-panel", HaMediaConverterPanel);
+
+class HaMediaConverterCard extends HTMLElement {
+  setConfig(config) {
+    if (config === null || typeof config !== "object" || Array.isArray(config)) {
+      throw new Error("Invalid configuration for HA Media Converter card.");
+    }
+  }
+
+  set hass(hass) {
+    this._hass = hass;
+    if (!this.shadowRoot) {
+      this.attachShadow({ mode: "open" });
+      this.shadowRoot.innerHTML = `
+        <ha-card>
+          <ha-media-converter-panel embedded></ha-media-converter-panel>
+        </ha-card>
+        <style>
+          ha-card { padding: 24px; }
+        </style>
+      `;
+    }
+    this.shadowRoot.querySelector("ha-media-converter-panel").hass = hass;
+  }
+
+  getCardSize() {
+    return 7;
+  }
+
+  static getStubConfig() {
+    return {};
+  }
+}
+
+customElements.define("ha-media-converter-card", HaMediaConverterCard);
+
+window.customCards = window.customCards || [];
+window.customCards.push({
+  type: "ha-media-converter-card",
+  name: "HA Media Converter",
+  description: "Upload and convert HEIC/HEIF images to Home Assistant media.",
+  preview: true,
+});
